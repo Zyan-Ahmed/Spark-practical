@@ -1,0 +1,50 @@
+from pyspark import SparkConf, SparkContext
+
+# Spark setup
+conf = SparkConf().setMaster("local").setAppName("IndiaTemperatures")
+sc = SparkContext(conf=conf)
+
+# Load data
+lines = sc.textFile(r"C:\Users\Danish\OneDrive\Desktop\india_weather.csv")
+
+# Get header
+header = lines.first()
+
+# Remove header
+data = lines.filter(lambda line: line != header)
+
+# Parse each line
+def parseLine(line):
+    fields = line.split(',')
+    stationID = fields[0]
+    city = fields[1]
+    measurementType = fields[3]  # TMIN or TMAX
+    temperature = float(fields[4]) * 0.1  # Convert to Celsius
+    return (stationID, city, measurementType, temperature)
+
+# Parse the lines
+parsedLines = data.map(parseLine)
+
+# Filter only TMIN and TMAX
+temps = parsedLines.filter(lambda x: x[2] in ("TMIN", "TMAX"))
+
+# Map as (city, (min_temp, max_temp)) tuples
+cityTemps = temps.map(lambda x: (
+    x[1],
+    (x[3] if x[2] == "TMIN" else float('inf'),
+     x[3] if x[2] == "TMAX" else float('-inf'))
+))
+
+# Reduce by city to get min and max
+combinedTemps = cityTemps.reduceByKey(
+    lambda a, b: (
+        min(a[0], b[0]),  # Min TMIN
+        max(a[1], b[1])   # Max TMAX
+    )
+)
+
+# Collect and print results
+results = combinedTemps.collect()
+
+for city, (minTemp, maxTemp) in results:
+    print(f"{city}\tMin: {minTemp:.2f}C\tMax: {maxTemp:.2f}C")

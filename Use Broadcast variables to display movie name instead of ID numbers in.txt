@@ -1,0 +1,53 @@
+rom pyspark.sql import SparkSession
+from pyspark.sql.functions import broadcast
+
+# Initialize Spark
+spark = SparkSession.builder.appName("BroadcastExample_Bollywood").getOrCreate()
+
+# Movie dictionary as list of tuples
+movie_data = [
+    (1, "Inception"),
+    (2, "Interstellar"),
+    (3, "The Dark Knight"),
+    (4, "Tenet"),
+    (5, "3 Idiots"),
+    (6, "Lagaan"),
+    (7, "Dangal"),
+    (8, "Gully Boy"),
+    (9, "Chhichhore"),
+    (10, "Bahubali: The Beginning"),
+    (11, "Bahubali: The Conclusion"),
+    (12, "KGF: Chapter 1"),
+    (13, "KGF: Chapter 2"),
+    (14, "RRR"),
+    (15, "Pathaan")
+]
+
+# Create movie DataFrame
+movies_df = spark.createDataFrame(movie_data, ["MovieID", "MovieName"])
+
+# Sample ratings data
+ratings_data = [
+    (101, 1, 5),
+    (102, 3, 4),
+    (103, 2, 5),
+    (104, 5, 4),
+    (105, 6, 5),
+    (106, 7, 5),
+    (107, 9, 4),
+    (108, 11, 5),
+    (109, 13, 5),
+    (110, 15, 4)
+]
+
+ratings_columns = ["UserID", "MovieID", "Rating"]
+ratings_df = spark.createDataFrame(ratings_data, ratings_columns)
+
+# Broadcast movies_df and join with ratings_df
+joined_df = ratings_df.join(broadcast(movies_df), on="MovieID", how="left")
+
+# Show joined result
+joined_df.show(truncate=False)
+
+# Stop Spark session
+spark.stop()

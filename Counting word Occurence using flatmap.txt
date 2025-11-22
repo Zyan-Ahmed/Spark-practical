@@ -1,0 +1,29 @@
+from pyspark.sql import SparkSession
+
+# Step 1: Start Spark Session
+spark = SparkSession.builder \
+    .appName("WordCountRDD_UserInput") \
+    .getOrCreate()
+
+# Step 2: Take input from the user
+print("Enter multiple lines of text. Type 'STOP' to finish input:")
+user_lines = []
+
+while True:
+    line = input()
+    if line.strip().upper() == "STOP":
+        break
+    user_lines.append(line)
+
+# Step 3: Convert input list to RDD
+rdd = spark.sparkContext.parallelize(user_lines)
+
+# Step 4: Word Count Logic
+words = rdd.flatMap(lambda line: line.split(" "))
+word_pairs = words.map(lambda word: (word.lower(), 1))
+word_counts = word_pairs.reduceByKey(lambda a, b: a + b)
+
+# Step 5: Display Results
+print("\n📊 Word Count Result:")
+for word, count in word_counts.collect():
+    print(f"{word}: {count}")

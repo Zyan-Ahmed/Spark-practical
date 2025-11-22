@@ -1,0 +1,52 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+
+# Initialize Spark
+spark = SparkSession.builder \
+    .appName("PySparkBasicExample") \
+    .master("local[*]") \
+    .getOrCreate()
+
+# Sample Data
+data = [
+    (1, "Alice", 25, 50000),
+    (2, "Bob", 30, 60000),
+    (3, "Charlie", 35, 70000),
+    (4, "David", 40, 80000)
+]
+columns = ["id", "name", "age", "salary"]
+
+# Create DataFrame
+df = spark.createDataFrame(data, columns)
+print("=== Original DataFrame ===")
+df.show()
+
+# Select columns
+print("=== Select name and salary ===")
+df.select("name", "salary").show()
+
+# Filter rows (age > 30)
+print("=== Filter: age > 30 ===")
+df.filter(col("age") > 30).show()
+
+# Aggregation: average salary
+print("=== Average Salary ===")
+df.groupBy().avg("salary").show()
+
+# Sorting by salary descending
+print("=== Sort by salary descending ===")
+df.orderBy(col("salary").desc()).show()
+
+# Add new column (bonus = 10% of salary)
+df = df.withColumn("bonus", col("salary") * 0.1)
+print("=== Add Bonus Column ===")
+df.show()
+
+# Using SQL
+df.createOrReplaceTempView("employees")
+print("=== SQL Query: salary > 60000 ===")
+sql_result = spark.sql("SELECT name, salary, bonus FROM employees WHERE salary > 60000")
+sql_result.show()
+
+# Stop Spark
+spark.stop()

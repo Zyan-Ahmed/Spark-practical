@@ -1,0 +1,16 @@
+from pyspark import SparkContext
+# 1. Start Spark Context
+sc = SparkContext("local", "Practical2_RDD")
+# 2. Create an RDD from a Python collection
+numbers = [10, 20, 30, 40, 50]
+rdd =sc.parallelize(numbers)
+# 3. Apply a Transformation: multiply each element by 2 
+rdd_transformed= rdd.map(lambda x: x * 2)
+result= rdd_transformed.collect()
+print("Original RDD:", numbers)
+print("Transformed RDD (each * 2):", result)
+# 5. Another Action: count the elements
+count= rdd.count()
+print("Number of elements in original RDD:", count)
+# Stop Spark Context after use
+sc.stop()

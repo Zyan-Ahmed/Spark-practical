@@ -1,0 +1,28 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import sum
+
+# Start Spark
+spark = SparkSession.builder.appName("TotalSpentByCustomer").getOrCreate()
+
+# Sample data: (customer_id, item_id, amount)
+data = [
+    (1, 101, 500),
+    (2, 102, 3000),
+    (1, 103, 700),
+    (2, 104, 10000),
+    (3, 105, 2000)
+]
+columns = ["customer_id", "item_id", "amount"]
+
+# Create DataFrame
+df = spark.createDataFrame(data, columns)
+print("=== Original Purchases ===")
+df.show()
+
+# Group by customer and calculate total spent
+total_spent = df.groupBy("customer_id").agg(sum("amount").alias("total_spent"))
+print("=== Total Spent by Each Customer ===")
+total_spent.show()
+
+# Stop Spark
+spark.stop()
